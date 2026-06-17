@@ -22,7 +22,7 @@ RGFW was designed as a backend for RSGL, but it can be used standalone or for ot
 
 This library
 
-1) is single header and portable (written in C89 in mind)
+1) is single header and portable (written in C99 in mind)
 2) is very small compared to other libraries
 3) only depends on system API libraries, Winapi, X11, Cocoa
 4) lets you create a window with a graphics context (OpenGL, Vulkan or DirectX) and manage the window and its events only with a few function calls 
@@ -55,19 +55,18 @@ import "RGFW"
 import gl "vendor:OpenGL"
 
 main :: proc() {
-	window := RGFW.createWindow("window", {200, 200, 200, 200}, RGFW.CENTER);
-	RGFW.window_makeCurrent(window);
+	window := RGFW.createWindow("window", 200, 200, 200, 200, .windowCenter | .windowOpenGL);
+	RGFW.window_makeCurrentContext_OpenGL(window);
 
-	gl.load_up_to(3, 3, RGFW.gl_set_proc_address)
+	gl.load_up_to(3, 3, RGFW.setProcAddress_OpenGL)
 	
 	for (!RGFW.window_shouldClose(window)) {
-		RGFW.window_checkEvent(window);
-
+		RGFW.pollEvents();
 
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.ClearColor(0, 0, 0, 1.0)
 		
-		RGFW.window_swapBuffers(window);
+		RGFW.window_swapBuffers_OpenGL(window);
 	}
 
 
@@ -91,39 +90,3 @@ There is a lot of in-header-documentation, but more documentation can be found [
 
 If you wish to build the documentation yourself, there is also a Doxygen file attached.
 
-
-# RGFW vs GLFW
-RGFW is more portable, in part because single-header library. It does not use callbacks and focuses on trying to be straightforward. RGFW tries to work with the programmer rather than forcing the programmer to work around it. It also uses far less RAM and storage than GLFW.
-
-| Feature | RGFW | GLFW |
-| --- | --- | --- |
-| .o size  (avg) | 46kb  | 280kb |
-| .so size (avg) | 94kb | 433kb |
-| .h size | 152kb  | 256kb |
-| basic demo lines | ~130  | ~160 |
-| memory ussage (linux) | 47 Mib | 55.9 Mib |
-| --- | --- | --- |
-| fps counter | ✓  | X |
-| multi-threading | ✓  | X |
-| drag and drop (input) | ✓  | ✓ |
-| drag and drop (output) | X | X |
-| joystick input | ~ (no macos support) | ✓ |
-| live window struct | ✓  | X |
-| event pipeline (dynamic) | ✓  | X |
-| multi-buffering | ✓  | ✓ |
-| set icon based on bitmap | ✓  | ✓ |
-| clipboard I/O | ✓  | ✓ |
-| multi-window support | ✓  | ✓ |
-| hide/show mouse | ✓  | ✓ |
-| no resize window | ✓  | ✓ |
-| no border window | ✓  | X |
-| transparent window | ✓  | ✓ |
-| key strings | ✓  | ✓ |
-| custom cursors | ✓  | ✓ |
-| wayland | ~ (backwards comp.)  | ✓ |
-| OpenGL | ✓  | ✓ |
-| Vulkan | ✓  | ✓ |
-| OpenGL ES | ✓  | ✓ |
-| EGL | ✓  | ✓ |
-| OSMesa | ✓  | ✓ |
-| Direct X | ✓  | X |
