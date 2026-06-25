@@ -1,4 +1,4 @@
-package RGFW 
+package RGFW
 
 import "core:c"
 
@@ -13,7 +13,7 @@ when ODIN_OS == .Windows {
             "system:winmm.lib",
 		}
 } else when ODIN_OS == .Darwin {
-    foreign import native { 
+    foreign import native {
         "RGFW.a",
         "system:Cocoa.framework",
         "system:IOKit.framework",
@@ -27,6 +27,13 @@ when ODIN_OS == .Windows {
         "system:GL"
     }
 }
+
+initFlags :: enum(u8) {
+	initOpenGL = (1 << 0), /*!< Load Native OpenGL */
+	initEGL = (1 << 1), /*!< Load EGL */
+	initVulkan = (1 << 2), /*!< Load Vulkan */
+	initX11 = (1 << 3), /*!< Force X11 (over Wayland) */
+};
 
 info :: struct {};
 
@@ -414,7 +421,7 @@ dataDropEvent :: struct {
 dataDragEvent :: struct {
 	type : eventType, /*!< which event has been sent?*/
 	win : ^window, /*!< the window this event applies to (for event queue events) */
-	x : i32, 
+	x : i32,
 	y : i32, /*!< mouse x, y of event (or drop point) */
 	action : dndActionType , /*!< the type of drag action, e.g. enter, leave, move */
 	dataType : dataTransferType , /*!< the type of data being dragged*/
@@ -433,7 +440,7 @@ monitorEvent :: struct {
 	win : ^window, /*!< the window this event applies to (for event queue events) */
 	monitor : ^monitor, /*!< the monitor that this event applies to */
 	state : bool /*!< if the monitor is connected or disconnected */
-} 
+}
 
 /*! @breif event data for when the window is updated, moved, resized or refreshed */
 windowUpdateEvent :: struct {
@@ -460,7 +467,7 @@ event :: struct #raw_union {
 	drag : dataDragEvent, /*!< data for data dragging events */
 	scale : scaleUpdatedEvent, /*!< data for dpi scaling update events */
 	monitor : monitorEvent  /*!< data for monitor events */
-}; 
+};
 
 /*!
 	@!brief codes for for the code is stupid and C++ waitForEvent
@@ -638,7 +645,7 @@ glHints :: struct {
 
 
 @(default_calling_convention="c", link_prefix="RGFW_")
-foreign native {   
+foreign native {
 	/**!
 	* @brief Allocates memory using the allocator defined by ALLOC at compile time.
 	* @param size The size (in bytes) of the memory block to allocate.
@@ -656,7 +663,7 @@ foreign native {
 	* @brief Returns the size (in bytes) of the window structure.
 	* @return The size of the window structure.
 	*/
-	sizeofWindow :: proc() -> c.size_t --- 
+	sizeofWindow :: proc() -> c.size_t ---
 
 	/**!
 	* @brief Returns the size (in bytes) of the window_src structure.
@@ -677,7 +684,7 @@ foreign native {
 	* @brief Checks if Wayland is currently being used.
 	* @return TRUE if using Wayland, FALSE otherwise.
 	*/
-	usingWayland :: proc() -> bool --- 
+	usingWayland :: proc() -> bool ---
 
 	/**!
 	* @brief Retrieves the current Cocoa layer (macOS only).
@@ -2169,7 +2176,7 @@ foreign native {
 	* @return 0 on success, a negative number error error on failure.
 	* @note This is automatically called when the first window is created.
 	*/
-	init :: proc() -> i32  ---
+	init :: proc(class_name : cstring, flags : initFlags) -> i32  ---
 
 	/**!
 	* @brief Deinitializes the current instance of the RGFW library.
@@ -2182,7 +2189,7 @@ foreign native {
 	* @param info A pointer to an info structure to be used for initialization.
 	* @return  0 on success, a negative number error error on failure and a positive number for a warning.
 	*/
-	init_ptr :: proc(info : ^info) -> i32 ---
+	init_ptr :: proc(class_name : cstring, flags : initFlags, info : ^info) -> i32 ---
 
 	/**!
 	* @brief Deinitializes a specific RGFW instance stored in the provided info pointer.
