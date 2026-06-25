@@ -57,7 +57,7 @@ else
 endif
 
 source/RGFW.o:
-	$(CC) -I./RGFW $(CUSTOM_CFLAGS) source/RGFW.c -c $(LIBS) -fPIC -o source/RGFW.o
+	$(CC) -I./source $(CUSTOM_CFLAGS) source/RGFW.c -c $(LIBS) -fPIC -o source/RGFW.o
 
 RGFW/RGFW$(LIB_EXT):
 ifeq ($(detected_OS),Windows)
