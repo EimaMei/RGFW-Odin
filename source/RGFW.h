@@ -2757,7 +2757,7 @@ RGFWDEF RGFW_bool RGFW_getPhysicalDevicePresentationSupport_Vulkan(VkInstance in
  * @param swapchain [OUTPUT] A pointer to an IDXGISwapChain pointer that will receive the created swap chain.
  * @return An integer result code (0 on success, or a DirectX error code on failure).
 */
-RGFWDEF int RGFW_window_createSwapChain_DirectX(RGFW_window* win, IDXGIFactory* pFactory, IUnknown* pDevice, IDXGISwapChain** swapchain);
+RGFWDEF i32 RGFW_window_createSwapChain_DirectX(RGFW_window* win, IDXGIFactory* pFactory, IUnknown* pDevice, IDXGISwapChain** swapchain);
 #endif
 #endif
 
@@ -11534,7 +11534,7 @@ void RGFW_window_captureMousePlatform(RGFW_window* win, RGFW_bool state) {
 }
 
 #ifdef RGFW_DIRECTX
-int RGFW_window_createSwapChain_DirectX(RGFW_window* win, IDXGIFactory* pFactory, IUnknown* pDevice, IDXGISwapChain** swapchain) {
+i32 RGFW_window_createSwapChain_DirectX(RGFW_window* win, IDXGIFactory* pFactory, IUnknown* pDevice, IDXGISwapChain** swapchain) {
     RGFW_ASSERT(win && pFactory && pDevice && swapchain);
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
