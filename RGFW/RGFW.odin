@@ -1,6 +1,8 @@
-package RGFW 
+package RGFW
 
 import "core:c"
+
+import "vendor:vulkan"
 
 when ODIN_OS == .Windows {
     @(extra_linker_flags="/NODEFAULTLIB:msvcrt")
@@ -12,7 +14,7 @@ when ODIN_OS == .Windows {
             "system:winmm.lib",
 		}
 } else when ODIN_OS == .Darwin {
-    foreign import native { 
+    foreign import native {
         "RGFW.a",
         "system:Cocoa.framework",
         "system:IOKit.framework",
@@ -20,10 +22,15 @@ when ODIN_OS == .Windows {
 } else when (ODIN_OS == .Linux || ODIN_OS == .FreeBSD || ODIN_OS == .OpenBSD) {
     foreign import native {
         "RGFW.a",
-        "system:X11",
-        "system:Xrandr",
     }
 }
+
+initFlags :: enum(u8) {
+	initOpenGL = (1 << 0), /*!< Load Native OpenGL */
+	initEGL = (1 << 1), /*!< Load EGL */
+	initVulkan = (1 << 2), /*!< Load Vulkan */
+	initX11 = (1 << 3), /*!< Force X11 (over Wayland) */
+};
 
 info :: struct {};
 
@@ -411,7 +418,7 @@ dataDropEvent :: struct {
 dataDragEvent :: struct {
 	type : eventType, /*!< which event has been sent?*/
 	win : ^window, /*!< the window this event applies to (for event queue events) */
-	x : i32, 
+	x : i32,
 	y : i32, /*!< mouse x, y of event (or drop point) */
 	action : dndActionType , /*!< the type of drag action, e.g. enter, leave, move */
 	dataType : dataTransferType , /*!< the type of data being dragged*/
@@ -430,7 +437,7 @@ monitorEvent :: struct {
 	win : ^window, /*!< the window this event applies to (for event queue events) */
 	monitor : ^monitor, /*!< the monitor that this event applies to */
 	state : bool /*!< if the monitor is connected or disconnected */
-} 
+}
 
 /*! @breif event data for when the window is updated, moved, resized or refreshed */
 windowUpdateEvent :: struct {
@@ -457,7 +464,7 @@ event :: struct #raw_union {
 	drag : dataDragEvent, /*!< data for data dragging events */
 	scale : scaleUpdatedEvent, /*!< data for dpi scaling update events */
 	monitor : monitorEvent  /*!< data for monitor events */
-}; 
+};
 
 /*!
 	@!brief codes for for the code is stupid and C++ waitForEvent
@@ -635,7 +642,7 @@ glHints :: struct {
 
 
 @(default_calling_convention="c", link_prefix="RGFW_")
-foreign native {   
+foreign native {
 	/**!
 	* @brief Allocates memory using the allocator defined by ALLOC at compile time.
 	* @param size The size (in bytes) of the memory block to allocate.
@@ -653,7 +660,7 @@ foreign native {
 	* @brief Returns the size (in bytes) of the window structure.
 	* @return The size of the window structure.
 	*/
-	sizeofWindow :: proc() -> c.size_t --- 
+	sizeofWindow :: proc() -> c.size_t ---
 
 	/**!
 	* @brief Returns the size (in bytes) of the window_src structure.
@@ -662,19 +669,10 @@ foreign native {
 	sizeofWindowSrc :: proc() -> c.size_t ---
 
 	/**!
-	* @brief (Unix) Toggles the use of Wayland.
-	* This is enabled by default when compiled with `WAYLAND`.
-	* If not using `WAYLAND`, Wayland functions are not exposed.
-	* This function can be used to force the use of XWayland.
-	* @param wayland A boolean value indicating whether to use Wayland (true) or not (false).
-	*/
-	useWayland :: proc(wayland : bool) ---
-
-	/**!
 	* @brief Checks if Wayland is currently being used.
 	* @return TRUE if using Wayland, FALSE otherwise.
 	*/
-	usingWayland :: proc() -> bool --- 
+	usingWayland :: proc() -> bool ---
 
 	/**!
 	* @brief Retrieves the current Cocoa layer (macOS only).
@@ -693,21 +691,6 @@ foreign native {
 	* @return A pointer to the Wayland display (`struct wl_display*`), or NULL if the platform is not in use.
 	*/
 	getDisplay_Wayland :: proc() -> rawptr ---
-
-	/**!
-	* @brief Sets the class name for X11 and WinAPI windows.
-	* Windows with the same class name will be grouped by the window manager.
-	* By default, the class name matches the root window’s name.
-	* @param name The class name to assign.
-	*/
-	setClassName :: proc(name : cstring) ---
-
-	/**!
-	* @brief Sets the X11 instance name.
-	* By default, the window name will be used as the instance name.
-	* @param name The X11 instance name to set.
-	*/
-	setXInstName :: proc(name : cstring) ---
 
 	/**!
 	* @brief (macOS only) Changes the current working directory to the application’s resource folder.
@@ -2087,7 +2070,171 @@ foreign native {
 	*/
 	extensionSupportedPlatform_OpenGL :: proc(extension : ^u8, len : c.size_t) -> bool ---
 
+	/* these are EGL specific functions, they may fallback to OpenGL */
+	/**!
+	 * @brief Creates and allocates an OpenGL/EGL context for the specified window.
+	 * @param win A pointer to the target window.
+	 * @param hints A pointer to an glHints structure defining context creation parameters.
+	 * @return A pointer to the newly created eglContext.
+	*/
+	window_createContext_EGL :: proc(win : ^window, hints : ^glHints) -> ^eglContext ---
 
+	/**!
+	 * @brief Creates an OpenGL/EGL context for the specified window using a preallocated context structure.
+	 * @param win A pointer to the target window.
+	 * @param ctx A pointer to an already allocated eglContext structure.
+	 * @param hints A pointer to an glHints structure defining context creation parameters.
+	 * @return TRUE on success, FALSE on failure.
+	*/
+	window_createContextPtr_EGL :: proc(win : ^window, ctx : ^eglContext, hints : ^glHints) -> bool ---
+
+	/**!
+	 * @brief Frees and deletes an OpenGL/EGL context.
+	 * @param win A pointer to the window.
+	 * @param ctx A pointer to the eglContext to delete.
+	 *
+	 * @note Automatically called by window_close if RGFW owns the context.
+	*/
+	window_deleteContext_EGL :: proc(win : ^window, ctx : ^eglContext) ---
+
+	/**!
+	 * @brief Deletes an OpenGL/EGL context without freeing its memory.
+	 * @param win A pointer to the window.
+	 * @param ctx A pointer to the eglContext to delete.
+	 *
+	 * @note Automatically called by window_close if RGFW owns the context.
+	*/
+	window_deleteContextPtr_EGL :: proc(win : ^window, ctx : ^eglContext) ---
+
+	/**!
+	 * @brief Retrieves the OpenGL/EGL context associated with a window.
+	 * @param win A pointer to the window.
+	 * @return A pointer to the associated eglContext, or NULL if none exists or if the context is a native OpenGL context.
+	*/
+	window_getContext_EGL :: proc(win : ^window) -> ^eglContext ---
+
+	/**!
+	 * @brief Retrieves the EGL display handle.
+	 * @return A pointer to the native EGLDisplay.
+	*/
+	getDisplay_EGL :: proc() -> rawptr ---
+
+	/**!
+	 * @brief Retrieves the native source context from an eglContext.
+	 * @param ctx A pointer to the eglContext.
+	 * @return A pointer to the native EGLContext handle.
+	*/
+	eglContext_getSourceContext :: proc(ctx : ^eglContext) -> rawptr ---
+
+	/**!
+	 * @brief Retrieves the EGL surface handle from an eglContext.
+	 * @param ctx A pointer to the eglContext.
+	 * @return A pointer to the EGLSurface associated with the context.
+	*/
+	eglContext_getSurface :: proc(ctx : ^eglContext) -> rawptr ---
+
+	/**!
+	 * @brief Retrieves the Wayland EGL window handle from an eglContext.
+	 * @param ctx A pointer to the eglContext.
+	 * @return A pointer to the wl_egl_window associated with the EGL context.
+	*/
+	eglContext_wlEGLWindow :: proc(ctx : ^eglContext) -> rawptr ---
+
+	/**!
+	 * @brief Swaps the EGL buffers for the specified window.
+	 * @param win A pointer to the window whose buffers should be swapped.
+	 *
+	 * @note Typically called by window_swapInterval.
+	*/
+	window_swapBuffers_EGL :: proc(win : ^window) ---
+
+	/**!
+	 * @brief Makes the specified window the current EGL rendering target.
+	 * @param win A pointer to the window to make current.
+	 *
+	 * @note This is typically called internally by window_makeCurrent.
+	*/
+	window_makeCurrentWindow_EGL :: proc(win : ^window) ---
+
+	/**!
+	 * @brief Makes the EGL context of the specified window current.
+	 * @param win A pointer to the window whose context should be made current.
+	 *
+	 * @note To move a context between threads, call window_makeCurrentContext_EGL(NULL)
+	 *       on the old thread before making it current on the new one.
+	*/
+	window_makeCurrentContext_EGL :: proc(win : ^window) ---
+
+	/**!
+	 * @brief Retrieves the current EGL context.
+	 * @return A pointer to the currently active EGLContext.
+	*/
+	getCurrentContext_EGL :: proc() -> rawptr ---
+
+	/**!
+	 * @brief Retrieves the current EGL window.
+	 * @return A pointer to the window currently bound as the EGL context target.
+	*/
+	getCurrentWindow_EGL :: proc() -> ^window ---
+
+	/**!
+	 * @brief Sets the EGL swap interval (vsync).
+	 * @param win A pointer to the window.
+	 * @param swapInterval The desired swap interval value (0 to disable vsync, 1 to enable).
+	*/
+	window_swapInterval_EGL :: proc(win : ^window, swapInterval : i32) ---
+
+	/**!
+	 * @brief Retrieves the address of a native OpenGL or OpenGL ES procedure in an EGL context.
+	 * @param procname The name of the OpenGL function to look up.
+	 * @return A pointer to the function, or NULL if not found.
+	*/
+	getProcAddress_EGL :: proc(procname : cstring) -> rawptr ---
+
+	/**!
+	 * @brief Checks whether a specific OpenGL or OpenGL ES API extension is supported in the current EGL context.
+	 * @param extension The name of the extension to check.
+	 * @param len The length of the extension string.
+	 * @return TRUE if supported, FALSE otherwise.
+	*/
+	extensionSupported_EGL :: proc(extension : cstring, len : c.size_t) -> bool ---
+
+	/**!
+	 * @brief Checks whether a specific platform-dependent EGL extension is supported in the current context.
+	 * @param extension The name of the extension to check.
+	 * @param len The length of the extension string.
+	 * @return TRUE if supported, FALSE otherwise.
+	*/
+	extensionSupportedPlatform_EGL :: proc(extension : cstring, len : c.size_t) -> bool ---
+
+	/* if you don't want to use the above macros */
+
+	/**!
+	 * @brief Retrieves the Vulkan instance extensions required by RGFW.
+	 * @param count [OUTPUT] A pointer that will receive the number of required extensions (typically 2).
+	 * @return A pointer to a static array of required Vulkan instance extension names.
+	*/
+	getRequiredInstanceExtensions_Vulkan :: proc(count : c.size_t) -> []cstring ---
+
+	/**!
+	 * @brief Creates a Vulkan surface for the specified window.
+	 * @param win A pointer to the window for which to create the Vulkan surface.
+	 * @param instance The Vulkan instance used to create the surface.
+	 * @param surface [OUTPUT] A pointer to a VkSurfaceKHR handle that will receive the created surface.
+	 * @return A VkResult indicating success or failure.
+	*/
+	window_createSurface_Vulkan :: proc(win : ^window, instance : vulkan.Instance, surface : ^vulkan.SurfaceKHR) -> vulkan.Result ---
+
+	/**!
+	 * @brief Checks whether the specified Vulkan physical device and queue family support presentation for RGFW.
+	 * @param instance The Vulkan instance.
+	 * @param physicalDevice The Vulkan physical device to check.
+	 * @param queueFamilyIndex The index of the queue family to query for presentation support.
+	 * @return TRUE if presentation is supported, FALSE otherwise.
+	*/
+	getPhysicalDevicePresentationSupport_Vulkan :: proc(instance : vulkan.Instance, physicalDevice : vulkan.PhysicalDevice, queueFamilyIndex : u32) -> bool ---
+
+	getInstanceProcAddress_Vulkan :: proc(instance : vulkan.Instance, procname : cstring) -> rawptr ---
 
 	/** * @defgroup Supporting
 	* @{ */
@@ -2166,7 +2313,7 @@ foreign native {
 	* @return 0 on success, a negative number error error on failure.
 	* @note This is automatically called when the first window is created.
 	*/
-	init :: proc() -> i32  ---
+	init :: proc(class_name : cstring, flags : initFlags) -> i32  ---
 
 	/**!
 	* @brief Deinitializes the current instance of the RGFW library.
@@ -2179,7 +2326,7 @@ foreign native {
 	* @param info A pointer to an info structure to be used for initialization.
 	* @return  0 on success, a negative number error error on failure and a positive number for a warning.
 	*/
-	init_ptr :: proc(info : ^info) -> i32 ---
+	init_ptr :: proc(class_name : cstring, flags : initFlags, info : ^info) -> i32 ---
 
 	/**!
 	* @brief Deinitializes a specific RGFW instance stored in the provided info pointer.
@@ -2202,4 +2349,12 @@ foreign native {
 
 setProcAddress_OpenGL :: proc(p: rawptr, name: cstring) {
 	(^rawptr)(p)^ = getProcAddress_OpenGL(name)
+}
+
+setProcAddress_EGL :: proc(p: rawptr, name: cstring) {
+	(^rawptr)(p)^ = getProcAddress_EGL(name)
+}
+
+setInstanceProcAddress_Vulkan :: proc(p: rawptr, instance : vulkan.Instance, name: cstring) {
+	(^rawptr)(p)^ = getInstanceProcAddress_Vulkan(instance, name)
 }

@@ -11,10 +11,11 @@ keyfunc ::  proc "c" (event: ^RGFW.event) {
     gotMsg = true // because you can't call odin functions from C-odin functions
 }
 
-main :: proc() {  
-    win := RGFW.createWindow("RGFW Example Window", 500, 500, 500, 500, .windowCenter | .windowOpenGL);
-   
-    
+main :: proc() {
+	RGFW.init("RGFW odin", .initOpenGL);
+	win := RGFW.createWindow("RGFW Example Window", 500, 500, 500, 500, .windowCenter | .windowOpenGL);
+
+
     RGFW.window_makeCurrentContext_OpenGL(win);
 
     RGFW.setEventCallback(.keyPressed, keyfunc)
@@ -26,7 +27,7 @@ main :: proc() {
 
     gl.ClearColor(0, 0, 0, 0);
 
-    for (running && RGFW.window_isKeyPressed(win, .keyEscape) == false) {   
+    for (running && RGFW.window_isKeyPressed(win, .keyEscape) == false) {
         if (gotMsg) {
             fmt.printf("got message from callback\n")
             gotMsg = false
@@ -41,7 +42,7 @@ main :: proc() {
                 fmt.printf("window resized\n");
             }
             if (event.type == .windowClose) {
-                running = false;  
+                running = false;
                 break;
             }
 
@@ -53,11 +54,12 @@ main :: proc() {
             }
 
         }
-        
+
         drawLoop(win);
     }
-    
+
     RGFW.window_close(win);
+	RGFW.deinit();
 }
 
 drawLoop :: proc(w: ^RGFW.window) {
@@ -66,6 +68,6 @@ drawLoop :: proc(w: ^RGFW.window) {
     gl.ClearColor(0.35, 0, 0.25, 255);
 
     gl.Clear(gl.COLOR_BUFFER_BIT);
-    
-    RGFW.window_swapBuffers_OpenGL(w); 
+
+    RGFW.window_swapBuffers_OpenGL(w);
 }
