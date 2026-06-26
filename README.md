@@ -34,6 +34,9 @@ import "RGFW"
 import gl "vendor:OpenGL"
 
 main :: proc() {
+    RGFW.init("example", .initOpenGL);
+    defer RGFW.deinit();
+
 	window := RGFW.createWindow("window", 200, 200, 200, 200, .windowCenter | .windowOpenGL);
 	RGFW.window_makeCurrentContext_OpenGL(window);
 
