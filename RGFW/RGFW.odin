@@ -9,7 +9,6 @@ when ODIN_OS == .Windows {
 			"system:user32.lib",
 			"system:gdi32.lib",
 			"system:shell32.lib",
-            "system:opengl32.lib",
             "system:winmm.lib",
 		}
 } else when ODIN_OS == .Darwin {
@@ -17,14 +16,12 @@ when ODIN_OS == .Windows {
         "RGFW.a",
         "system:Cocoa.framework",
         "system:IOKit.framework",
-        "system:OpenGL.framework",
     }
 } else when (ODIN_OS == .Linux || ODIN_OS == .FreeBSD || ODIN_OS == .OpenBSD) {
     foreign import native {
         "RGFW.a",
         "system:X11",
         "system:Xrandr",
-        "system:GL"
     }
 }
 
