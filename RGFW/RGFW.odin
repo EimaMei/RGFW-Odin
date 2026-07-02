@@ -1884,18 +1884,35 @@ foreign native {
 
 	/**!
 	* @brief Reads clipboard data.
+	* @param requestedType the requested clipboard data type to attempt to read
 	* @return A pointer to the clipboard data object or NULL on failure.
 	*/
-	readClipboard::proc() -> ^dataTransfer ---
+	readClipboard::proc(requestedType : dataTransferType) -> ^dataTransfer ---
 
 	/**!
 	* @brief Reads clipboard data into your object pointer using your provided buffer, or returns the required length if the buffer is NULL or bufferCapacity is 0.
+ 	* @param requestedType the requested clipboard data type to attempt to read
 	* @param buffer the buffer used to fill the output dataTransfer object's data
 	* @param capacity the capacity/length of the buffer in bytes
 	* @param data [OUTPUT] A pointer to the dataTransfer object that will receive the clipboard data. (cannot be NULL)
 	* @return returns TRUE on success and FALSE on failure
 	*/
-	readClipboardPtr :: proc(buffer: ^u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
+	readClipboardPtr :: proc(requestedType : dataTransferType, buffer: ^u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
+
+	/**!
+	* @brief Reads clipboard data as a string.
+	* @return A pointer to the clipboard data object or NULL on failure.
+	*/
+	readClipboardString::proc() -> ^dataTransfer ---
+
+	/**!
+	* @brief Reads clipboard string data into your object pointer using your provided buffer, or returns the required length if the buffer is NULL or bufferCapacity is 0.
+	* @param buffer the buffer used to fill the output dataTransfer object's data
+	* @param capacity the capacity/length of the buffer in bytes
+	* @param data [OUTPUT] A pointer to the dataTransfer object that will receive the clipboard data. (cannot be NULL)
+	* @return returns TRUE on success and FALSE on failure
+	*/
+	readClipboardStringPtr :: proc(buffer: ^u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
 
 	/**!
 	* @brief Writes data to the clipboard.
