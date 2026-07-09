@@ -36,8 +36,8 @@ endif
 
 all:
 	make RGFW/RGFW$(LIB_EXT)
-	$(ODIN) build basic.odin -file
-	$(ODIN) build basic-buffer.odin -file
+	$(ODIN) run examples/basic.odin -file
+	$(ODIN) run examples/basic-buffer.odin -file
 
 build-RGFW:
 	make RGFW/RGFW$(LIB_EXT)
@@ -47,13 +47,13 @@ ifeq ($(detected_OS),Windows)
 	make clean
 	.\build-libs.bat
 	make RGFW/RGFW$(LIB_EXT)
-	$(ODIN) run basic.odin -file
-	$(ODIN) run basic-buffer.odin -file
+	$(ODIN) run examples/basic.odin -file
+	$(ODIN) run examples/basic-buffer.odin -file
 else
 	make clean
 	make RGFW/RGFW$(LIB_EXT)
-	$(ODIN) run basic.odin -file
-	$(ODIN) run basic-buffer.odin -file
+	$(ODIN) run examples/basic.odin -file
+	$(ODIN) run examples/basic-buffer.odin -file
 endif
 
 source/RGFW.o:

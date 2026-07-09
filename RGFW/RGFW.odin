@@ -23,45 +23,49 @@ when ODIN_OS == .Windows {
     foreign import native {
         "RGFW.a",
     }
+} else when (ODIN_OS == .JS) {
+    foreign import native {
+        "RGFW_wasm.o",
+    }
 }
 
-initFlags :: enum(u8) {
-	initOpenGL = (1 << 0), /*!< Load Native OpenGL */
-	initEGL = (1 << 1), /*!< Load EGL */
-	initVulkan = (1 << 2), /*!< Load Vulkan */
-	initX11 = (1 << 3), /*!< Force X11 (over Wayland) */
-};
+initFlag :: enum(u8) {
+	OpenGL, /*!< Load Native OpenGL */
+	EGL, /*!< Load EGL */
+	Vulkan, /*!< Load Vulkan */
+	X11, /*!< Force X11 (over Wayland) */
+}
+initFlags :: bit_set[initFlag; u8]
 
-info :: struct {};
+info :: struct {}
 
 /*! @brief The window stucture for interfacing with the window */
-window :: struct {};
+window :: struct {}
 
 /*! @brief The source window stucture for interfacing with the underlying windowing API (e.g. winapi, wayland, cocoa, etc) */
-window_src :: struct {};
+window_src :: struct {}
 
 /*! @brief The color format for pixel data */
 format :: enum(u8) {
-	formatRGB8 = 0,    /*!< 8-bit RGB (3 channels) */
-	formatBGR8,    /*!< 8-bit BGR (3 channels) */
-	formatRGBA8,   /*!< 8-bit RGBA (4 channels) */
-	formatARGB8,   /*!< 8-bit RGBA (4 channels) */
-	formatBGRA8,   /*!< 8-bit BGRA (4 channels) */
-	formatABGR8,   /*!< 8-bit BGRA (4 channels) */
-	formatCount
-};
+	RGB8 = 0,    /*!< 8-bit RGB (3 channels) */
+	BGR8,    /*!< 8-bit BGR (3 channels) */
+	RGBA8,   /*!< 8-bit RGBA (4 channels) */
+	ARGB8,   /*!< 8-bit RGBA (4 channels) */
+	BGRA8,   /*!< 8-bit BGRA (4 channels) */
+	ABGR8,   /*!< 8-bit BGRA (4 channels) */
+}
 
 /*! @brief layout struct for mapping out format types */
-colorLayout :: struct {  r : i32, g : i32, b : i32, a : i32, channels : u32  };
+colorLayout :: struct {  r : i32, g : i32, b : i32, a : i32, channels : u32  }
 
 /*! @brief function type converting raw image data between formats */
-convertImageDataFunc :: proc(dest_data : ^u8 , src_data : ^u8, srcLayout : ^colorLayout , destLayout : ^colorLayout , count : c.size_t);
+convertImageDataFunc :: proc(dest_data : ^u8 , src_data : ^u8, srcLayout : ^colorLayout , destLayout : ^colorLayout , count : c.size_t)
 
 /*! @brief a stucture for interfacing with the underlying native image (e.g. XImage, HBITMAP, etc) */
-nativeImage :: struct {};
+nativeImage :: struct {}
 
 /*! @brief a stucture for interfacing with pixel data as a renderable surface */
-surface :: struct {};
+surface :: struct {}
 
 /*! @brief gamma struct for monitors */
 gammaRamp :: struct {
@@ -69,7 +73,7 @@ gammaRamp :: struct {
 	green : ^u16, /*!< array for the green channel */
 	blue : ^u16, /*!< array for the blue channel */
 	count : c.size_t /*! count of elements in each channel */
-};
+}
 
 /*! @brief monitor mode data | can be changed by the user (with functions)*/
 monitorMode :: struct {
@@ -77,10 +81,10 @@ monitorMode :: struct {
 	refreshRate : c.float,/*!< monitor refresh rate */
 	red : u8, blue : u8, green : u8, /*!< sizeof rgb values */
 	src : rawptr /*!< source API mode */
-};
+}
 
 /*! @brief structure for monitor node and source monitor data */
-monitorNode :: struct {};
+monitorNode :: struct {}
 
 /*! @brief structure for monitor data */
 monitor :: struct {
@@ -92,7 +96,7 @@ monitor :: struct {
 	mode : monitorMode,  /*!< current mode of the monitor */
 	userPtr : rawptr, /*!< pointer for user data */
 	node : ^monitorNode /*!< source node data of the monitor */
-};
+}
 
 /*! @brief what type of request you are making for the monitor */
 modeRequest ::enum(u8) {
@@ -100,13 +104,13 @@ modeRequest ::enum(u8) {
 	monitorRefresh = 1 << (1), /*!< change the refresh rate */
 	monitorRGB = 1 << (2), /*!< change the monitor RGB bits size */
 	monitorAll = monitorScale | monitorRefresh | monitorRGB
-};
+}
 
 /*! @brief RGFW's abstract keycodes */
 key ::enum(u8) {
-	keyNULL = 0,
-	keyEscape = '\033',
-	keyBacktick = '`',
+	Null = 0,
+	Escape = '\033',
+	Backtick = '`',
 	key0 = '0',
 	key1 = '1',
 	key2 = '2',
@@ -117,163 +121,163 @@ key ::enum(u8) {
 	key7 = '7',
 	key8 = '8',
 	key9 = '9',
-	keyMinus = '-',
-	keyEqual = '=',
-	keyEquals = keyEqual,
-	keyBackSpace = '\b',
-	keyTab = '\t',
-	keySpace = ' ',
-	keyA = 'a',
-	keyB = 'b',
-	keyC = 'c',
-	keyD = 'd',
-	keyE = 'e',
-	keyF = 'f',
-	keyG = 'g',
-	keyH = 'h',
-	keyI = 'i',
-	keyJ = 'j',
-	keyK = 'k',
-	keyL = 'l',
-	keyM = 'm',
-	keyN = 'n',
-	keyO = 'o',
-	keyP = 'p',
-	keyQ = 'q',
-	keyR = 'r',
-	keyS = 's',
-	keyT = 't',
-	keyU = 'u',
-	keyV = 'v',
-	keyW = 'w',
-	keyX = 'x',
-	keyY = 'y',
-	keyZ = 'z',
-	keyPeriod = '.',
-	keyComma = ',',
-	keySlash = '/',
-	keyBracket = '[',
-    keyCloseBracket = ']',
-    keySemicolon = ';',
-	keyApostrophe = '\'',
-	keyBackSlash = '\\',
-	keyReturn = '\n',
-	keyEnter = keyReturn,
-	keyDelete = '\177', /* 127 */
-	keyF1,
-	keyF2,
-	keyF3,
-	keyF4,
-	keyF5,
-	keyF6,
-	keyF7,
-	keyF8,
-	keyF9,
-	keyF10,
-	keyF11,
-	keyF12,
-    keyF13,
-    keyF14,
-    keyF15,
-    keyF16,
-    keyF17,
-    keyF18,
-    keyF19,
-    keyF20,
-    keyF21,
-    keyF22,
-    keyF23,
-    keyF24,
-    keyF25,
-	keyCapsLock,
-	keyShiftL,
-	keyControlL,
-	keyAltL,
-	keySuperL,
-	keyShiftR,
-	keyControlR,
-	keyAltR,
-	keySuperR,
-	keyUp,
-	keyDown,
-	keyLeft,
-	keyRight,
-	keyInsert,
-	keyMenu,
-	keyEnd,
-	keyHome,
-	keyPageUp,
-	keyPageDown,
-	keyNumLock,
-	keyPadSlash,
-	keyPadMultiply,
-	keyPadPlus,
-	keyPadMinus,
-	keyPadEqual,
-	keyPadEquals = keyPadEqual,
-	keyPad1,
-	keyPad2,
-	keyPad3,
-	keyPad4,
-	keyPad5,
-	keyPad6,
-	keyPad7,
-	keyPad8,
-	keyPad9,
-	keyPad0,
-	keyPadPeriod,
-	keyPadReturn,
-	keyScrollLock,
-    keyPrintScreen,
-    keyPause,
-	keyWorld1,
-    keyWorld2,
-};
+	Minus = '-',
+	Equal = '=',
+	Equals = Equal,
+	BackSpace = '\b',
+	Tab = '\t',
+	Space = ' ',
+	A = 'a',
+	B = 'b',
+	C = 'c',
+	D = 'd',
+	E = 'e',
+	F = 'f',
+	G = 'g',
+	H = 'h',
+	I = 'i',
+	J = 'j',
+	K = 'k',
+	L = 'l',
+	M = 'm',
+	N = 'n',
+	O = 'o',
+	P = 'p',
+	Q = 'q',
+	R = 'r',
+	S = 's',
+	T = 't',
+	U = 'u',
+	V = 'v',
+	W = 'w',
+	X = 'x',
+	Y = 'y',
+	Z = 'z',
+	Period = '.',
+	Comma = ',',
+	Slash = '/',
+	Bracket = '[',
+    CloseBracket = ']',
+    Semicolon = ';',
+	Apostrophe = '\'',
+	BackSlash = '\\',
+	Return = '\n',
+	Enter = Return,
+	Delete = '\177', /* 127 */
+	F1,
+	F2,
+	F3,
+	F4,
+	F5,
+	F6,
+	F7,
+	F8,
+	F9,
+	F10,
+	F11,
+	F12,
+    F13,
+    F14,
+    F15,
+    F16,
+    F17,
+    F18,
+    F19,
+    F20,
+    F21,
+    F22,
+    F23,
+    F24,
+    F25,
+	CapsLock,
+	ShiftL,
+	ControlL,
+	AltL,
+	SuperL,
+	ShiftR,
+	ControlR,
+	AltR,
+	SuperR,
+	Up,
+	Down,
+	Left,
+	Right,
+	Insert,
+	Menu,
+	End,
+	Home,
+	PageUp,
+	PageDown,
+	NumLock,
+	PadSlash,
+	PadMultiply,
+	PadPlus,
+	PadMinus,
+	PadEqual,
+	PadEquals = PadEqual,
+	Pad1,
+	Pad2,
+	Pad3,
+	Pad4,
+	Pad5,
+	Pad6,
+	Pad7,
+	Pad8,
+	Pad9,
+	Pad0,
+	PadPeriod,
+	PadReturn,
+	ScrollLock,
+    PrintScreen,
+    Pause,
+	World1,
+    World2,
+}
 
 /*! @brief abstract mouse button codes */
 mouseButton :: enum(u8) {
-	mouseLeft = 0, /*!< left mouse button */
-	mouseMiddle, /*!< mouse-wheel-button */
-	mouseRight, /*!< right mouse button */
-	mouseMisc1, mouseMisc2, mouseMisc3, mouseMisc4, mouseMisc5,
-	mouseFinal
-};
+	Left = 0, /*!< left mouse button */
+	Middle, /*!< mouse-wheel-button */
+	Right, /*!< right mouse button */
+	Misc1, mouseMisc2, mouseMisc3, mouseMisc4, mouseMisc5,
+	Final
+}
 
 /*! abstract key modifier codes */
 keymod :: enum(u8) {
-	modCapsLock = 1 << (0),
-	modNumLock  = 1 << (1),
-	modControl  = 1 << (2),
-	modAlt = 1 << (3),
-	modShift  = 1 << (4),
-	modSuper = 1 << (5),
-	modScrollLock = 1 << (6)
-};
+	CapsLock = 1 << (0),
+	NumLock  = 1 << (1),
+	Control  = 1 << (2),
+	Alt = 1 << (3),
+	Shift  = 1 << (4),
+	Super = 1 << (5),
+	ScrollLock = 1 << (6)
+}
 
 /*! types of dnd drag actions */
 dndActionType :: enum(u8) {
-	dndActionNone = 0,
-	dndActionEnter, /*!< data has been dragged into the window area */
-	dndActionMove, /*!< the data that was dragged into the window area has moved inside the window */
-	dndActionExit, /*!< the data that was dragged into the window area has left the window */
-};
+	None = 0,
+	Enter, /*!< data has been dragged into the window area */
+	Move, /*!< the data that was dragged into the window area has moved inside the window */
+	Exit, /*!< the data that was dragged into the window area has left the window */
+}
 
 /*! types of transfered data (clipboard, dnd) */
 dataTransferType :: enum(u8) {
-	dataNone = 0,
-	dataText, /*!< plain text string */
-	dataFile, /*!< file string */
-	dataURL, /*!< URL string */
-	dataImage, /*!< raw image data */
-	dataUnknown /*!< unknown raw data */
-};
+	None = 0,
+	Text, /*!< plain text string */
+	File, /*!< file string */
+	URL, /*!< URL string */
+	Image, /*!< raw image data */
+	Unknown /*!< unknown raw data */
+}
 
 /*! struct for data transfers, mostly used for the clipboard API */
 dataTransfer :: struct {
 	data : ^u8, /*!< transfered data */
 	length : c.size_t, /*!< the full length of the data in bytes, including null-terminator, if included. null-terminators are ensured when reading data from RGFW */
 	type : dataTransferType /*!< the type of data being transfered */
-};
+}
 
 /*! internal node for a individual data drop */
 dataDropNode :: struct {
@@ -285,7 +289,7 @@ dataDropNode :: struct {
 
 /*! @brief codes for the event types that can be sent */
 eventType :: enum(u8) {
-	eventNone = 0, /*!< no event has been sent */
+	None = 0, /*!< no event has been sent */
  	keyPressed, /*!< a key has been pressed */
 	keyReleased, /*!< a key has been released */
 	keyChar, /*!< keyboard character input event specifically for utf8 input */
@@ -310,46 +314,19 @@ eventType :: enum(u8) {
 	scaleUpdated, /*!< content scale factor changed */
 	monitorConnected, /*!< a monitor has been connected */
 	monitorDisconnected, /*!< a monitor has been disconnected */
-	eventCount, /*!< the number of event types there are */
 	mousePosChanged = mouseMotion, /*!< alias for mouseMotion (may be deleted at some point) */
-};
+}
 
 /*! @brief flags for toggling whether or not an event should be processed */
-eventFlag :: enum(u32) {
-    keyPressedFlag = 1 << (eventType.keyPressed),
-    keyReleasedFlag = 1 << (eventType.keyReleased),
-    keyCharFlag = 1 << (eventType.keyChar),
-    mouseScrollFlag = 1 << (eventType.mouseScroll),
-    mouseButtonPressedFlag = 1 << (eventType.mouseButtonPressed),
-    mouseButtonReleasedFlag = 1 << (eventType.mouseButtonReleased),
-    mouseMotionFlag = 1 << (eventType.mouseMotion),
-    mouseRawMotionFlag = 1 << (eventType.mouseRawMotion),
-    mouseEnterFlag = 1 << (eventType.mouseEnter),
-    mouseLeaveFlag = 1 << (eventType.mouseLeave),
-    windowMovedFlag = 1 << (eventType.windowMoved),
-    windowResizedFlag = 1 << (eventType.windowResized),
-    windowFocusInFlag = 1 << (eventType.windowFocusIn),
-    windowFocusOutFlag = 1 << (eventType.windowFocusOut),
-    windowRefreshFlag = 1 << (eventType.windowRefresh),
-    windowMaximizedFlag = 1 << (eventType.windowMaximized),
-    windowMinimizedFlag = 1 << (eventType.windowMinimized),
-    windowRestoredFlag = 1 << (eventType.windowRestored),
-    scaleUpdatedFlag = 1 << (eventType.scaleUpdated),
-    windowCloseFlag = 1 << (eventType.windowClose),
-    dataDropFlag = 1 << (eventType.dataDrop),
-    dataDragFlag = 1 << (eventType.dataDrag),
-	monitorConnectedFlag = 1 << (eventType.monitorConnected),
-	monitorDisconnectedFlag = 1 << (eventType.monitorDisconnected),
-    mousePosChangedFlag = mouseMotionFlag, /* alias for mouseMotionFlag (may be deleted at some point) */
+eventFlag :: bit_set[eventType; u32]
 
-    keyEventsFlag = keyPressedFlag | keyReleasedFlag | keyCharFlag,
-    mouseEventsFlag = mouseButtonPressedFlag | mouseButtonReleasedFlag | mouseMotionFlag | mouseEnterFlag | mouseLeaveFlag | mouseScrollFlag | mouseRawMotionFlag,
-    windowEventsFlag = windowMovedFlag | windowResizedFlag | windowRefreshFlag | windowMaximizedFlag | windowMinimizedFlag | windowRestoredFlag | scaleUpdatedFlag,
-    windowFocusEventsFlag = windowFocusInFlag | windowFocusOutFlag,
-    dataDragDropEventsFlag = dataDropFlag | dataDragFlag,
-	monitorEventsFlag = monitorConnectedFlag | monitorDisconnectedFlag,
-    allEventFlags = keyEventsFlag | mouseEventsFlag | windowEventsFlag | windowFocusEventsFlag | dataDragDropEventsFlag | windowCloseFlag | monitorEventsFlag
-};
+keyEventsFlag          :: eventFlag{.keyPressed, .keyReleased, .keyChar}
+mouseEventsFlag        :: eventFlag{.mouseButtonPressed, .mouseButtonReleased, .mouseMotion, .mouseEnter, .mouseLeave, .mouseScroll, .mouseRawMotion}
+windowEventsFlag       :: eventFlag{.windowMoved, .windowResized, .windowRefresh, .windowMaximized, .windowMinimized, .windowRestored, .scaleUpdated}
+windowFocusEventsFlag  :: eventFlag{.windowFocusIn, .windowFocusOut}
+dataDragDropEventsFlag :: eventFlag{.dataDrop, .dataDrag}
+monitorEventsFlag      :: eventFlag{.monitorConnected, .monitorDisconnected}
+allEventFlags          :: keyEventsFlag | mouseEventsFlag | windowEventsFlag | windowFocusEventsFlag | dataDragDropEventsFlag | {.windowClose} | monitorEventsFlag
 
 /*! Event structure(s) and union for checking/getting events */
 
@@ -388,7 +365,7 @@ mouseMotionEvent :: struct {
 	x : i32, /*!< mouse x of event (or drop point) */
 	y : i32, /*!< mouse y of event (or drop point) */
 	inWindow : bool /*!< if the mouse is in the window or not */
-};
+}
 
 /*! @brief event data for a key press/release event */
 keyEvent :: struct {
@@ -398,21 +375,21 @@ keyEvent :: struct {
 	repeat : bool, /*!< key press event repeated (the key is being held) */
 	mod : keymod , /*!< state of the key modifier state */
 	state : bool /*!< if the key was pressed or released */
-};
+}
 
 /*! @brief event data for a key character event */
 keyCharEvent :: struct {
 	type : eventType, /*!< which event has been sent?*/
 	win : ^window, /*!< the window this event applies to (for event queue events) */
 	value : u32 /*!< the unicode value of the key */
-};
+}
 
 /*! @brief event data for any data drop event */
 dataDropEvent :: struct {
 	type : eventType, /*!< which event has been sent?*/
 	win : ^window, /*!< the window this event applies to (for event queue events) */
 	value : ^dataDropNode
-};
+}
 
 /*! @brief event data for any data drag event */
 dataDragEvent :: struct {
@@ -464,7 +441,7 @@ event :: struct #raw_union {
 	drag : dataDragEvent, /*!< data for data dragging events */
 	scale : scaleUpdatedEvent, /*!< data for dpi scaling update events */
 	monitor : monitorEvent  /*!< data for monitor events */
-};
+}
 
 /*!
 	@!brief codes for for the code is stupid and C++ waitForEvent
@@ -474,91 +451,93 @@ event :: struct #raw_union {
 			  if waitMS == -1 or waitMS == the max size of an unsigned 32-bit int, the loop will not return until it gets another event
 */
 eventWait :: enum(i32) {
-	eventNoWait = 0,
-	eventWaitNext = -1
-};
+	NoWait = 0,
+	WaitNext = -1
+}
 
 /*! @brief generic event callback function type */
-genericFunc:: #type proc "c" (e : ^event);
+genericFunc:: #type proc "c" (e : ^event)
 
 /*! brief structure that holds an array to callback data*/
 callbacks :: struct {
-	arr : [eventType.eventCount]genericFunc /*!< an array of all the callbacks */
-};
+	arr : [eventType]genericFunc /*!< an array of all the callbacks */
+}
 
 /*! @brief optional bitwise arguments for making a windows, these can be OR'd together */
-windowFlags :: enum(u32) {
-	windowNoBorder = 1 << (0), /*!< the window doesn't have a border / frame / decor */
-	windowNoResize = 1 << (1), /*!< the window cannot be resized by the user */
-	windowAllowDND = 1 << (2), /*!< the window supports drag and drop */
-	windowHideMouse = 1 << (3), /*! the window should hide the mouse (can be toggled later on using `window_showMouse`) */
-	windowFullscreen = 1 << (4), /*!< the window is fullscreen by default */
-	windowTranslucent = 1 << (5), /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
-	windowTransparent = windowTranslucent,  /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
-	windowCenter = 1 << (6), /*! center the window on the screen */
-	windowRawMouse = 1 << (7), /*!< use raw mouse mouse on window creation */
-	windowScaleToMonitor = 1 << (8), /*! scale the window to the screen */
-	windowHide = 1 << (9), /*! the window is hidden */
-	windowMaximize = 1 << (10), /*!< maximize the window on creation */
-	windowCenterCursor = 1 << (11), /*!< center the cursor to the window on creation */
-	windowcfloating = 1 << (12), /*!< create a c.floating window */
-	windowFocusOnShow = 1 << (13), /*!< focus the window when it's shown */
-	windowMinimize = 1 << (14), /*!< focus the window when it's shown */
-	windowFocus = 1 << (15), /*!< if the window is in focus */
-	windowCaptureMouse = 1 << (16), /*!< capture the mouse mouse mouse on window creation */
-	windowOpenGL = 1 << (17), /*!< create an OpenGL context (you can also do this manually with window_createContext_OpenGL) */
-	windowEGL = 1 << (18), /*!< create an EGL context (you can also do this manually with window_createContext_EGL) */
-	noDeinitOnClose = 1 << (19), /*!< do not auto deinit RGFW if the window closes and this is the last window open */
-	windowedFullscreen = windowNoBorder | windowMaximize,
-	windowCaptureRawMouse = windowCaptureMouse | windowRawMouse
-};
+windowFlag :: enum(c.int) {
+	NoBorder, /*!< the window doesn't have a border / frame / decor */
+	NoResize, /*!< the window cannot be resized by the user */
+	AllowDND, /*!< the window supports drag and drop */
+	HideMouse, /*! the window should hide the mouse (can be toggled later on using `window_showMouse`) */
+	Fullscreen, /*!< the window is fullscreen by default */
+	Translucent, /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
+	Transparent = Translucent,  /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
+	Center, /*! center the window on the screen */
+	RawMouse, /*!< use raw mouse mouse on window creation */
+	ScaleToMonitor, /*! scale the window to the screen */
+	Hide, /*! the window is hidden */
+	Maximize, /*!< maximize the window on creation */
+	CenterCursor, /*!< center the cursor to the window on creation */
+	cfloating, /*!< create a c.floating window */
+	FocusOnShow, /*!< focus the window when it's shown */
+	Minimize, /*!< focus the window when it's shown */
+	Focus, /*!< if the window is in focus */
+	CaptureMouse, /*!< capture the mouse mouse mouse on window creation */
+	OpenGL, /*!< create an OpenGL context (you can also do this manually with window_createContext_OpenGL) */
+	EGL, /*!< create an EGL context (you can also do this manually with window_createContext_EGL) */
+	noDeinitOnClose, /*!< do not auto deinit RGFW if the window closes and this is the last window open */
+}
+
+windowFlags           :: bit_set[windowFlag; u32]
+windowedFullscreen    :: windowFlags{.NoBorder, .Maximize}
+windowCaptureRawMouse :: windowFlags{.CaptureMouse, .RawMouse}
 
 /*! @brief the types of icon to set */
 icon :: enum(u8) {
-	iconTaskbar = 1 << (0),
-	iconWindow = 1 << (1),
-	iconBoth = iconTaskbar | iconWindow
-};
+	Taskbar = 1 << (0),
+	Window = 1 << (1),
+	Both = Taskbar | Window
+}
 
 /*! @brief standard mouse icons */
 mouseIcon :: enum(u8) {
-	mouseNormal = 0,
-	mouseArrow,
-	mouseIbeam,
-	mouseText = mouseIbeam,
-	mouseCrosshair,
-	mousePointingHand,
-	mouseResizeEW,
-	mouseResizeNS,
-	mouseResizeNWSE,
-	mouseResizeNESW,
-	mouseResizeNW,
-	mouseResizeN,
-	mouseResizeNE,
-	mouseResizeE,
-	mouseResizeSE,
-	mouseResizeS,
-	mouseResizeSW,
-	mouseResizeW,
-	mouseResizeAll,
-	mouseNotAllowed,
-	mouseWait,
-	mouseProgress,
-	mouseIconCount,
-    mouseIconFinal = 16 /* padding for alignment */
-};
+	Normal = 0,
+	Arrow,
+	Ibeam,
+	Text = Ibeam,
+	Crosshair,
+	PointingHand,
+	ResizeEW,
+	ResizeNS,
+	ResizeNWSE,
+	ResizeNESW,
+	ResizeNW,
+	ResizeN,
+	ResizeNE,
+	ResizeE,
+	ResizeSE,
+	ResizeS,
+	ResizeSW,
+	ResizeW,
+	ResizeAll,
+	NotAllowed,
+	Wait,
+	Progress,
+	IconCount,
+    IconFinal = 16 /* padding for alignment */
+}
 
 /*! @breif flash request type */
 flashRequest :: enum(u8) {
-	flashCancel = 0,
-	flashBriefly,
-	flashUntilFocused
-};
+	Cancel = 0,
+	Briefly,
+	UntilFocused
+}
 
 /*! @brief the type of debug message */
 debugType :: enum(u8) {
-	typeError = 0, typeWarning, typeInfo
-};
+	Error = 0, Warning, Info
+}
 
 /*! @brief error codes for known failure types */
 errorCode :: enum(u8) {
@@ -576,47 +555,47 @@ errorCode :: enum(u8) {
 	errEventQueue,
 	infoWindow, infoBuffer, infoGlobal, infoOpenGL,
 	warningWayland, warningOpenGL
-};
+}
 
 /*! @brief data for debug messages */
 debugInfo :: struct {
 	type : debugType, /*!< the type of message */
 	code : errorCode, /*!< the code for the specific type of debug message */
 	msg : cstring /*!< string message */
-};
+}
 
 /*! @brief callback function type for debug messags */
-debugFunc :: proc(info : ^debugInfo);
+debugFunc :: proc(info : ^debugInfo)
 
 /*! @brief function pointer equivalent of rawptr */
-//proc :: proc();
+//proc :: proc()
 
 /*! @brief abstract structure for interfacing with the underlying OpenGL API */
-glContext :: struct {};
+glContext :: struct {}
 
 /*! @brief abstract structure for interfacing with the underlying EGL API */
-eglContext :: struct {};
+eglContext :: struct {}
 
 /*! values for the releaseBehavior hint */
 glReleaseBehavior :: enum(i32)   {
-	glReleaseFlush = 0, /*!< flush the pipeline will be flushed when the context is release */
-	glReleaseNone /*!< do nothing on release */
-};
+	Flush = 0, /*!< flush the pipeline will be flushed when the context is release */
+	None /*!< do nothing on release */
+}
 
 /*! values for the profile hint */
 glProfile :: enum(i32)  {
-	glCore = 0, /*!< the core OpenGL version, e.g. just support for that version */
-	glForwardCompatibility, /*!< only compatibility for newer versions of OpenGL as well as the requested version */
-	glCompatibility, /*!< allow compatibility for older versions of OpenGL as well as the requested version */
-	glES, /*!< use OpenGL ES */
-	glWeb /*!< use WebGL version (otherwise the version is changed to match it's GLES equivalent) */
-};
+	Core = 0, /*!< the core OpenGL version, e.g. just support for that version */
+	ForwardCompatibility, /*!< only compatibility for newer versions of OpenGL as well as the requested version */
+	Compatibility, /*!< allow compatibility for older versions of OpenGL as well as the requested version */
+	ES, /*!< use OpenGL ES */
+	Web /*!< use WebGL version (otherwise the version is changed to match it's GLES equivalent) */
+}
 
 /*! values for the renderer hint */
 glRenderer :: enum(i32)  {
-	glAccelerated = 0, /*!< hardware accelerated (GPU) */
-	glSoftware /*!< software rendered (CPU) */
-};
+	Accelerated = 0, /*!< hardware accelerated (GPU) */
+	Software /*!< software rendered (CPU) */
+}
 
 /*! OpenGL initalization hints */
 glHints :: struct {
@@ -638,7 +617,7 @@ glHints :: struct {
 	share : ^glContext,  /*!< Share this OpenGL context with newly created OpenGL contexts; defaults to NULL. */
 	shareEGL : ^eglContext, /*!< Share this EGL context with newly created OpenGL contexts; defaults to NULL. */
 	renderer : glRenderer /*!< renderer to use e.g. accelerated or software defaults to accelerated */
-};
+}
 
 
 @(default_calling_convention="c", link_prefix="RGFW_")
@@ -1798,7 +1777,7 @@ foreign native {
 	* @param win The target window.
 	* @param show True to show the mouse, false to hide it.
 	*/
-	window_showMouse :: proc(win: ^window, show: bool) -> bool ---
+	window_showMouse :: proc(win: ^window, show: bool) ---
 
 	/**!
 	* @brief Checks if the mouse is currently hidden in the window.
