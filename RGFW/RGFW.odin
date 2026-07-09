@@ -107,7 +107,7 @@ modeRequest :: enum(u8) {
 }
 
 /*! @brief RGFW's abstract keycodes */
-key : :enum(u8) {
+key :: enum(u8) {
 	Null = 0,
 	Escape = '\033',
 	Backtick = '`',
