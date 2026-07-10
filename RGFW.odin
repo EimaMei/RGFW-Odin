@@ -2211,7 +2211,7 @@ foreign native {
 	 * @param count [OUTPUT] A pointer that will receive the number of required extensions (typically 2).
 	 * @return A pointer to a static array of required Vulkan instance extension names.
 	*/
-	getRequiredInstanceExtensions_Vulkan :: proc(count : c.size_t) -> []cstring ---
+	getRequiredInstanceExtensions_Vulkan :: proc(count : ^c.size_t) -> [^]cstring ---
 
 	/**!
 	 * @brief Creates a Vulkan surface for the specified window.
