@@ -30,9 +30,9 @@ if defined vs_path (
 
 :compile
 pushd source
-if not exist ..\RGFW\lib mkdir ..\RGFW\lib
-echo Building libraries to ..\RGFW\RGFW\lib folder
+if not exist ..\lib mkdir ..\lib
+echo Building libraries to ..\lib folder
 cl /I./ -nologo -MT -TC -c -O2 RGFW.c
-lib -nologo RGFW.obj -out:..\RGFW\lib\RGFW_msvc.lib
+lib -nologo RGFW.obj -out:..\lib\RGFW_msvc.lib
 del *.obj
 popd

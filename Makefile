@@ -69,5 +69,6 @@ else
 endif
 
 clean:
-	rm -f source/RGFW.o RGFW/RGFW$(LIB_EXT)
-	rm -f RGFW/RGFW.lib source/RGFW.obj
+	rm -f source/RGFW.o
+	rm -r -f lib
+	rm -f RGFW.lib source/RGFW.obj
