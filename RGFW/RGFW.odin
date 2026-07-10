@@ -29,7 +29,7 @@ when ODIN_OS == .Windows {
     }
 }
 
-initFlag :: enum(u8) {
+initFlag :: enum(c.int) {
 	OpenGL, /*!< Load Native OpenGL */
 	EGL, /*!< Load EGL */
 	Vulkan, /*!< Load Vulkan */
@@ -56,10 +56,10 @@ format :: enum(u8) {
 }
 
 /*! @brief layout struct for mapping out format types */
-colorLayout :: struct {  r : i32, g : i32, b : i32, a : i32, channels : u32  }
+colorLayout :: struct { r, g, b, a: i32, channels : u32 }
 
 /*! @brief function type converting raw image data between formats */
-convertImageDataFunc :: proc(dest_data : ^u8 , src_data : ^u8, srcLayout : ^colorLayout , destLayout : ^colorLayout , count : c.size_t)
+convertImageDataFunc :: #type proc "c" (dest_data : [^]u8, src_data : [^]u8, srcLayout : ^colorLayout, destLayout : ^colorLayout, count : c.size_t)
 
 /*! @brief a stucture for interfacing with the underlying native image (e.g. XImage, HBITMAP, etc) */
 nativeImage :: struct {}
@@ -69,17 +69,17 @@ surface :: struct {}
 
 /*! @brief gamma struct for monitors */
 gammaRamp :: struct {
-	red : ^u16, /*!< array for the red channel */
-	green : ^u16, /*!< array for the green channel */
-	blue : ^u16, /*!< array for the blue channel */
+	red : [^]u16, /*!< array for the red channel */
+	green : [^]u16, /*!< array for the green channel */
+	blue : [^]u16, /*!< array for the blue channel */
 	count : c.size_t /*! count of elements in each channel */
 }
 
 /*! @brief monitor mode data | can be changed by the user (with functions)*/
 monitorMode :: struct {
-	w : i32, h : i32, /*!< monitor workarea size */
+	w, h : i32, /*!< monitor workarea size */
 	refreshRate : c.float,/*!< monitor refresh rate */
-	red : u8, blue : u8, green : u8, /*!< sizeof rgb values */
+	red, blue, green : u8, /*!< sizeof rgb values */
 	src : rawptr /*!< source API mode */
 }
 
@@ -88,18 +88,18 @@ monitorNode :: struct {}
 
 /*! @brief structure for monitor data */
 monitor :: struct {
-	x : i32, y : i32, /*!< x - y of the monitor workarea */
+	x, y : i32, /*!< x - y of the monitor workarea */
 	name : [128]u8, /*!< monitor name */
-	scaleX : c.float, scaleY : c.float, /*!< monitor content scale */
+	scaleX, scaleY : c.float, /*!< monitor content scale */
 	pixelRatio : c.float, /*!< pixel ratio for monitor (1.0 for regular, 2.0 for hiDPI)  */
-	physW : c.float, physH : c.float, /*!< monitor physical size in inches */
+	physW, physH : c.float, /*!< monitor physical size in inches */
 	mode : monitorMode,  /*!< current mode of the monitor */
 	userPtr : rawptr, /*!< pointer for user data */
 	node : ^monitorNode /*!< source node data of the monitor */
 }
 
 /*! @brief what type of request you are making for the monitor */
-modeRequest ::enum(u8) {
+modeRequest :: enum(u8) {
 	monitorScale = 1 << (0), /*!< scale the monitor size */
 	monitorRefresh = 1 << (1), /*!< change the refresh rate */
 	monitorRGB = 1 << (2), /*!< change the monitor RGB bits size */
@@ -107,7 +107,7 @@ modeRequest ::enum(u8) {
 }
 
 /*! @brief RGFW's abstract keycodes */
-key ::enum(u8) {
+key :: enum(u8) {
 	Null = 0,
 	Escape = '\033',
 	Backtick = '`',
@@ -239,8 +239,11 @@ mouseButton :: enum(u8) {
 	Left = 0, /*!< left mouse button */
 	Middle, /*!< mouse-wheel-button */
 	Right, /*!< right mouse button */
-	Misc1, mouseMisc2, mouseMisc3, mouseMisc4, mouseMisc5,
-	Final
+	Misc1,
+	Misc2,
+	Misc3,
+	Misc4,
+	Misc5,
 }
 
 /*! abstract key modifier codes */
@@ -274,14 +277,14 @@ dataTransferType :: enum(u8) {
 
 /*! struct for data transfers, mostly used for the clipboard API */
 dataTransfer :: struct {
-	data : ^u8, /*!< transfered data */
+	data : [^]u8, /*!< transfered data */
 	length : c.size_t, /*!< the full length of the data in bytes, including null-terminator, if included. null-terminators are ensured when reading data from RGFW */
 	type : dataTransferType /*!< the type of data being transfered */
 }
 
 /*! internal node for a individual data drop */
 dataDropNode :: struct {
-	data : ^u8, /*!< dropped data */
+	data : [^]u8, /*!< dropped data */
 	length : c.size_t, /*!< the size of the data in bytes */
 	type : dataTransferType, /*!< the type of data being dropped */
 	next : ^dataDropNode /*!< the next drop data node if any [when handling callbacks, this will always be NULL because the linked list is built as events are processed] */
@@ -565,7 +568,7 @@ debugInfo :: struct {
 }
 
 /*! @brief callback function type for debug messags */
-debugFunc :: proc(info : ^debugInfo)
+debugFunc :: proc "c" (info : ^debugInfo)
 
 /*! @brief function pointer equivalent of rawptr */
 //proc :: proc()
@@ -604,16 +607,16 @@ glHints :: struct {
 	stereo : i32, /*!< hint the context to use stereoscopic frame buffers for 3D (false by default) */
 	auxBuffers : i32, /*!< number of aux buffers (0 by default) */
 	doubleBuffer : i32, /*!< request double buffering (true by default) */
-	red : i32, green : i32, blue : i32, alpha : i32, /*!< set color bit sizes (all 8 by default) */
+	red, green, blue, alpha : i32, /*!< set color bit sizes (all 8 by default) */
 	depth : i32, /*!< set depth buffer bit size (24 by default) */
-	accumRed : i32, accumGreen : i32, accumBlue : i32, accumAlpha : i32, /*!< set accumulated RGBA bit sizes (all 0 by default) */
+	accumRed, accumGreen, accumBlue, accumAlpha : i32, /*!< set accumulated RGBA bit sizes (all 0 by default) */
 	sRGB: bool, /*!< request sRGA format (false by default) */
 	robustness : bool, /*!< request a "robust" (as in memory-safe) context (false by default). For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/EXT/EXT_robustness.txt */
 	debug : bool, /*!< request OpenGL debugging (false by default). */
 	noError : bool, /*!< request no OpenGL errors (false by default). This causes OpenGL errors to be undefined behavior. For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/KHR/KHR_no_error.txt */
-	releaseBehavior : glReleaseBehavior , /*!< hint how the OpenGL driver should behave when changing contexts (glReleaseNone by default). For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/KHR/KHR_context_flush_control.txt */
-	profile : glProfile , /*!< set OpenGL API profile (glCore by default) */
-	major : i32, minor : i32,  /*!< set the OpenGL API profile version (by default glMajor is 1, glMinor is 0) */
+	releaseBehavior : glReleaseBehavior, /*!< hint how the OpenGL driver should behave when changing contexts (glReleaseNone by default). For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/KHR/KHR_context_flush_control.txt */
+	profile : glProfile, /*!< set OpenGL API profile (glCore by default) */
+	major, minor : i32,  /*!< set the OpenGL API profile version (by default glMajor is 1, glMinor is 0) */
 	share : ^glContext,  /*!< Share this OpenGL context with newly created OpenGL contexts; defaults to NULL. */
 	shareEGL : ^eglContext, /*!< Share this EGL context with newly created OpenGL contexts; defaults to NULL. */
 	renderer : glRenderer /*!< renderer to use e.g. accelerated or software defaults to accelerated */
@@ -677,7 +680,7 @@ foreign native {
 	moveToMacOSResourceDir :: proc() ---
 
 	/*! copy image to another image, respecting each image's format */
-	copyImageData :: proc(dest_data : ^u8, w : i32, h : i32, dest_format : format, src_data : ^u8, src_format : format, func : convertImageDataFunc) ---
+	copyImageData :: proc(dest_data : [^]u8, w, h : i32, dest_format : format, src_data : [^]u8, src_format : format, func : convertImageDataFunc) ---
 
 	/**!
 	* @brief Returns the size (in bytes) of the nativeImage structure.
@@ -710,7 +713,7 @@ foreign native {
 	* window_createSurface and window_createSurfacePtr exist only for X11 to address this issues
 	* Of course, you can also manually set the root window with setRootWindow
 	*/
-	createSurface :: proc(data : ^u8, w : i32, h : i32, format : format) -> ^surface ---
+	createSurface :: proc(data : [^]u8, w, h : i32, format : format) -> ^surface ---
 
 	/**!
 	* @brief Creates a surface using a pre-allocated surface structure.
@@ -721,7 +724,7 @@ foreign native {
 	* @param surface A pointer to a pre-allocated surface structure.
 	* @return TRUE if successful, FALSE otherwise.
 	*/
-	createSurfacePtr :: proc(data : ^u8, w : i32, h : i32, format : format, surface : ^surface) -> bool  ---
+	createSurfacePtr :: proc(data : [^]u8, w, h : i32, format : format, surface : ^surface) -> bool  ---
 
 	/**!
 	* @brief Retrieves the native image associated with a surface.
@@ -753,7 +756,7 @@ foreign native {
 	*
 	* @note The icon is not resized by default.
 	*/
-	createMouse :: proc(data : ^u8, w : i32, h : i32, format : format) -> rawptr ---
+	createMouse :: proc(data : [^]u8, w, h : i32, format : format) -> rawptr ---
 
 	/**!
 	* @brief create a standard mouse icon
@@ -774,14 +777,14 @@ foreign native {
 	* @param count [OUTPUT] the count of the array
 	* @return the allocated array of supported modes
 	*/
-	monitor_getModes :: proc(monitor : ^monitor, count : ^c.size_t) -> ^monitorMode ---
+	monitor_getModes :: proc(monitor : ^monitor, count : ^c.size_t) -> [^]monitorMode ---
 
 	/**!
 	* @brief Free RGFW allocated modes array
 	* @param monitor the source monitor object
 	* @param modes a pointer to an allocated array of modes
 	*/
-	freeModes :: proc(mode : ^monitorMode) ---
+	freeModes :: proc(mode : [^]monitorMode) ---
 
 	/**!
 	* @brief Get the supported modes of a monitor using a pre-allocated array
@@ -789,7 +792,7 @@ foreign native {
 	* @param modes [OUTPUT] a pointer to an allocated array of modes
 	* @return the number of (possible) modes, if [modes == NULL] the possible nodes *may* be less than the actual modes
 	*/
-	monitor_getModesPtr :: proc(monitor : ^monitor, modes : ^^monitorMode) -> c.size_t  ---
+	monitor_getModesPtr :: proc(monitor : ^monitor, modes : ^[^]monitorMode) -> c.size_t  ---
 
 	/**!
 	* @brief find the closest monitor mode based on the give mode with size being the highest priority, format being the second and refreshrate being the third.
@@ -856,7 +859,7 @@ foreign native {
 	* @param h [OUTPUT] the height of the workarea
 	* @return a bool if the function was successful
 	*/
-	monitor_getWorkarea :: proc(monitor : ^monitor, x : ^i32, y : ^i32, width : ^i32, height : ^i32) -> bool ---
+	monitor_getWorkarea :: proc(monitor : ^monitor, x, y, width, height : ^i32) -> bool ---
 
 	/**!
 	* @brief Get the position of a monitor (the same as monitor.x / monitor.y)
@@ -864,7 +867,7 @@ foreign native {
 	* @param y [OUTPUT] the y position of the monitor
 	* @return a bool if the function was successful
 	*/
-	monitor_getPosition :: proc(monitor : ^monitor, x : ^i32, y : ^i32) -> bool ---
+	monitor_getPosition :: proc(monitor : ^monitor, x, y : ^i32) -> bool ---
 
 	/**!
 	* @brief Get the name of a monitor (the same as monitor.name)
@@ -879,7 +882,7 @@ foreign native {
 	* @param y [OUTPUT] the y scale of the monitor
 	* @return a bool if the function was successful
 	*/
-	monitor_getScale :: proc(monitor : ^monitor, x : ^c.float, y : ^c.float) -> bool ---
+	monitor_getScale :: proc(monitor : ^monitor, x, y : ^c.float) -> bool ---
 
 	/**!
 	* @brief Get the physical size of a monitor (the same as monitor.physW / monitor.physH)
@@ -888,7 +891,7 @@ foreign native {
 	* @param h [OUTPUT] the physical height of the monitor
 	* @return a bool if the function was successful
 	*/
-	monitor_getPhysicalSize :: proc(monitor : ^monitor, w : ^c.float, h : ^c.float) -> bool ---
+	monitor_getPhysicalSize :: proc(monitor : ^monitor, w, h : ^c.float) -> bool ---
 
 	/**!
 	* @brief Set the user pointer of a monitor (the same as monitor.userPtr = userPtr)
@@ -936,7 +939,7 @@ foreign native {
 	* @param len [OUTPUT] A pointer to store the number of monitors found, if max is not zero and monitors is not NULL, length will be set to max.
 	* @return An array of pointers to monitor structures or NULL if the function failed.
 	*/
-	getMonitorsPtr :: proc(max : c.size_t, monitors : ^^monitor, len : ^c.size_t) -> bool ---
+	getMonitorsPtr :: proc(max : c.size_t, monitors : [^]^monitor, len : ^c.size_t) -> bool ---
 
 	/**!
 	* @brief Retrieves the primary monitor.
@@ -969,7 +972,7 @@ foreign native {
 	* @param request The modeRequest that defines the comparison parameters.
 	* @return TRUE if both modes are equivalent, otherwise FALSE.
 	*/
-	monitorModeCompare :: proc(mode : ^monitorMode, mode2 : ^monitorMode, request : ^modeRequest) -> bool ---
+	monitorModeCompare :: proc(mode, mode2 : ^monitorMode, request : ^modeRequest) -> bool ---
 
 	/**!
 	* @brief Scales a monitor’s mode to match a window’s size.
@@ -1162,7 +1165,7 @@ foreign native {
 	* window_createSurface and window_createSurfacePtr exist only for X11 to address this issues
 	* Of course, you can also manually set the root window with setRootWindow
 	*/
-	window_createSurface :: proc(win: ^window, data : ^u8, w : i32, h : i32, format : format) -> ^surface ---
+	window_createSurface :: proc(win: ^window, data : [^]u8, w, h : i32, format : format) -> ^surface ---
 
 	/**!
 	* @brief creates a new surface structure using a pre-allocated surface structure
@@ -1173,7 +1176,7 @@ foreign native {
 	* @param a pointer to the pre-allocated surface structure
 	* @return a bool if the creation was successful or not
 	*/
-	window_createSurfacePtr :: proc(win: ^window, data : ^u8, w : i32, h : i32, format : format, surface : ^surface) -> bool  ---
+	window_createSurfacePtr :: proc(win: ^window, data : [^]u8, w, h : i32, format : format, surface : ^surface) -> bool  ---
 
 	/**!
 	* @brief set the function/callback used for converting surface data between formats
@@ -1652,7 +1655,7 @@ foreign native {
 	*
 	* NOTE: The image may be resized by default.
 	*/
-	window_setIcon :: proc(win: ^window, data: ^u8, w: i32, h: i32, format: format) -> bool  ---
+	window_setIcon :: proc(win: ^window, data: [^]u8, w, h: i32, format: format) -> bool  ---
 
 	/**!
 	* @brief sets the icon for the window and/or taskbar
@@ -1664,7 +1667,7 @@ foreign native {
 	* @param type the target icon type (taskbar, window, or both)
 	* @return TRUE if successful, FALSE otherwise
 	*/
-	window_setIconEx :: proc(win: ^window, data: ^u8, w: i32, h: i32, format: format, type: icon) -> bool  ---
+	window_setIconEx :: proc(win: ^window, data: [^]u8, w, h: i32, format: format, type: icon) -> bool  ---
 
 	/**!
 	* @brief sets the mouse icon for the window using a loaded mouse icon
@@ -1876,7 +1879,7 @@ foreign native {
 	* @param data [OUTPUT] A pointer to the dataTransfer object that will receive the clipboard data. (cannot be NULL)
 	* @return returns TRUE on success and FALSE on failure
 	*/
-	readClipboardPtr :: proc(requestedType : dataTransferType, buffer: ^u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
+	readClipboardPtr :: proc(requestedType : dataTransferType, buffer: [^]u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
 
 	/**!
 	* @brief Reads clipboard data as a string.
@@ -1891,7 +1894,7 @@ foreign native {
 	* @param data [OUTPUT] A pointer to the dataTransfer object that will receive the clipboard data. (cannot be NULL)
 	* @return returns TRUE on success and FALSE on failure
 	*/
-	readClipboardStringPtr :: proc(buffer: ^u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
+	readClipboardStringPtr :: proc(buffer: [^]u8, capacity: c.size_t, data: ^dataTransfer) -> bool ---
 
 	/**!
 	* @brief Writes data to the clipboard.
