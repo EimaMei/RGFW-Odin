@@ -15,17 +15,17 @@ when ODIN_OS == .Windows {
 		}
 } else when ODIN_OS == .Darwin {
     foreign import native {
-        "RGFW.a",
+        "lib/RGFW.a",
         "system:Cocoa.framework",
         "system:IOKit.framework",
     }
 } else when (ODIN_OS == .Linux || ODIN_OS == .FreeBSD || ODIN_OS == .OpenBSD) {
     foreign import native {
-        "RGFW.a",
+        "lib/RGFW.a",
     }
 } else when (ODIN_OS == .JS) {
     foreign import native {
-        "RGFW_wasm.o",
+        "lib/RGFW_wasm.o",
     }
 }
 
