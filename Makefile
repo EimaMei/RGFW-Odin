@@ -57,7 +57,7 @@ else
 endif
 
 source/RGFW.o:
-	$(CC) -I./source $(CUSTOM_CFLAGS) source/RGFW.c -c $(LIBS) -fPIC -o source/RGFW.o
+	$(CC) -I./source/RGFW -I./source $(CUSTOM_CFLAGS) source/RGFW.c -c $(LIBS) -fPIC -o source/RGFW.o
 
 lib/RGFW$(LIB_EXT):
 	mkdir -p lib

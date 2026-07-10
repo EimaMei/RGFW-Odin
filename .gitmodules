@@ -1,0 +1,3 @@
+[submodule "source/RGFW"]
+	path = source/RGFW
+	url = https://github.com/hedgehogsoft/RGFW-dev
