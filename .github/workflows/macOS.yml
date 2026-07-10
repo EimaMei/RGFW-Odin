@@ -30,7 +30,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    
+      with:
+        submodules: recursive  
+
     - name: Setup Release Version
       run: |
         echo "RELEASE_NAME=RGFW-Odin-${{ github.event.release.tag_name }}_macos" >> $GITHUB_ENV
