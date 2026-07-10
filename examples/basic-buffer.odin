@@ -1,6 +1,6 @@
 package main
 
-import RGFW "../RGFW"
+import RGFW "../"
 
 pixelWidth : i32
 
