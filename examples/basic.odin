@@ -1,7 +1,7 @@
 package main
 
 import "core:fmt"
-import "../RGFW"
+import RGFW "../"
 import gl "vendor:OpenGL"
 
 running := true
