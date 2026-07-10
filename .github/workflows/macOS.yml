@@ -67,7 +67,8 @@ jobs:
 
     - name: Generate Artifacts
       run: |
-        cp -v -r ./RGFW ./build/${{ env.RELEASE_NAME }}
+        cp -v -r ./lib ./build/${{ env.RELEASE_NAME }}
+        cp -v *.odin README.md ./build/${{ env.RELEASE_NAME }}
         cd build
         tar -czvf ${{ env.RELEASE_NAME }}.tar.gz ${{ env.RELEASE_NAME }}
         
