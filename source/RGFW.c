@@ -5,4 +5,4 @@
 #define RGFW_DIRECTX
 #define RGFW_IMPLEMENTATION
 #define RGFW_USE_XDL
-#include "./RGFW/RGFW.h"
+#include "RGFW/RGFW.h"

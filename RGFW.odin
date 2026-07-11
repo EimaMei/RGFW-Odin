@@ -1,8 +1,8 @@
 package RGFW
 
 import "core:c"
-
 import "vendor:vulkan"
+
 
 when ODIN_OS == .Windows {
     @(extra_linker_flags="/NODEFAULTLIB:msvcrt")
@@ -47,7 +47,7 @@ window_src :: struct {}
 
 /*! @brief The color format for pixel data */
 format :: enum(u8) {
-	RGB8 = 0,    /*!< 8-bit RGB (3 channels) */
+	RGB8 = 0,/*!< 8-bit RGB (3 channels) */
 	BGR8,    /*!< 8-bit BGR (3 channels) */
 	RGBA8,   /*!< 8-bit RGBA (4 channels) */
 	ARGB8,   /*!< 8-bit RGBA (4 channels) */
@@ -59,7 +59,7 @@ format :: enum(u8) {
 colorLayout :: struct { r, g, b, a: i32, channels : u32 }
 
 /*! @brief function type converting raw image data between formats */
-convertImageDataFunc :: #type proc "c" (dest_data : [^]u8, src_data : [^]u8, srcLayout : ^colorLayout, destLayout : ^colorLayout, count : c.size_t)
+convertImageDataFunc :: #type proc "c" (dest_data : [^]u8, src_data : [^]u8, #by_ptr srcLayout, destLayout : colorLayout, count : c.size_t)
 
 /*! @brief a stucture for interfacing with the underlying native image (e.g. XImage, HBITMAP, etc) */
 nativeImage :: struct {}
@@ -93,7 +93,7 @@ monitor :: struct {
 	scaleX, scaleY : c.float, /*!< monitor content scale */
 	pixelRatio : c.float, /*!< pixel ratio for monitor (1.0 for regular, 2.0 for hiDPI)  */
 	physW, physH : c.float, /*!< monitor physical size in inches */
-	mode : monitorMode,  /*!< current mode of the monitor */
+	mode : monitorMode, /*!< current mode of the monitor */
 	userPtr : rawptr, /*!< pointer for user data */
 	node : ^monitorNode /*!< source node data of the monitor */
 }
@@ -248,14 +248,16 @@ mouseButton :: enum(u8) {
 
 /*! abstract key modifier codes */
 keymod :: enum(u8) {
-	CapsLock = 1 << (0),
-	NumLock  = 1 << (1),
-	Control  = 1 << (2),
-	Alt = 1 << (3),
-	Shift  = 1 << (4),
-	Super = 1 << (5),
-	ScrollLock = 1 << (6)
+	CapsLock,
+	NumLock,
+	Control,
+	Alt,
+	Shift,
+	Super,
+	ScrollLock
 }
+
+keymods :: bit_set [keymod; u8]
 
 /*! types of dnd drag actions */
 dndActionType :: enum(u8) {
@@ -376,7 +378,7 @@ keyEvent :: struct {
 	win : ^window, /*!< the window this event applies to (for event queue events) */
 	value : key, /*!< the physical key of the event, refers to where key is physically */
 	repeat : bool, /*!< key press event repeated (the key is being held) */
-	mod : keymod , /*!< state of the key modifier state */
+	mod : keymods, /*!< state of the key modifier state */
 	state : bool /*!< if the key was pressed or released */
 }
 
@@ -398,10 +400,9 @@ dataDropEvent :: struct {
 dataDragEvent :: struct {
 	type : eventType, /*!< which event has been sent?*/
 	win : ^window, /*!< the window this event applies to (for event queue events) */
-	x : i32,
-	y : i32, /*!< mouse x, y of event (or drop point) */
-	action : dndActionType , /*!< the type of drag action, e.g. enter, leave, move */
-	dataType : dataTransferType , /*!< the type of data being dragged*/
+	x, y : i32, /*!< mouse x, y of event (or drop point) */
+	action : dndActionType, /*!< the type of drag action, e.g. enter, leave, move */
+	dataType : dataTransferType, /*!< the type of data being dragged*/
 }
 
 /*! @brief event data for when the window scale (DPI) is updated */
@@ -474,21 +475,20 @@ windowFlag :: enum(c.int) {
 	HideMouse, /*! the window should hide the mouse (can be toggled later on using `window_showMouse`) */
 	Fullscreen, /*!< the window is fullscreen by default */
 	Translucent, /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
-	Transparent = Translucent,  /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
+	Transparent = Translucent, /*!< the window is translucent (only properly works on X11 and MacOS, although it's meant for for windows) */
 	Center, /*! center the window on the screen */
 	RawMouse, /*!< use raw mouse mouse on window creation */
 	ScaleToMonitor, /*! scale the window to the screen */
 	Hide, /*! the window is hidden */
 	Maximize, /*!< maximize the window on creation */
 	CenterCursor, /*!< center the cursor to the window on creation */
-	cfloating, /*!< create a c.floating window */
+	Floating, /*!< create a floating window */
 	FocusOnShow, /*!< focus the window when it's shown */
 	Minimize, /*!< focus the window when it's shown */
 	Focus, /*!< if the window is in focus */
 	CaptureMouse, /*!< capture the mouse mouse mouse on window creation */
 	OpenGL, /*!< create an OpenGL context (you can also do this manually with window_createContext_OpenGL) */
 	EGL, /*!< create an EGL context (you can also do this manually with window_createContext_EGL) */
-	noDeinitOnClose, /*!< do not auto deinit RGFW if the window closes and this is the last window open */
 }
 
 windowFlags           :: bit_set[windowFlag; u32]
@@ -526,8 +526,6 @@ mouseIcon :: enum(u8) {
 	NotAllowed,
 	Wait,
 	Progress,
-	IconCount,
-    IconFinal = 16 /* padding for alignment */
 }
 
 /*! @breif flash request type */
@@ -602,7 +600,7 @@ glRenderer :: enum(i32)  {
 
 /*! OpenGL initalization hints */
 glHints :: struct {
-	stencil : i32,  /*!< set stencil buffer bit size (0 by default) */
+	stencil : i32, /*!< set stencil buffer bit size (0 by default) */
 	samples : i32, /*!< set number of sample buffers (0 by default) */
 	stereo : i32, /*!< hint the context to use stereoscopic frame buffers for 3D (false by default) */
 	auxBuffers : i32, /*!< number of aux buffers (0 by default) */
@@ -616,8 +614,8 @@ glHints :: struct {
 	noError : bool, /*!< request no OpenGL errors (false by default). This causes OpenGL errors to be undefined behavior. For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/KHR/KHR_no_error.txt */
 	releaseBehavior : glReleaseBehavior, /*!< hint how the OpenGL driver should behave when changing contexts (glReleaseNone by default). For more information check the overview section: https://registry.khronos.org/OpenGL/extensions/KHR/KHR_context_flush_control.txt */
 	profile : glProfile, /*!< set OpenGL API profile (glCore by default) */
-	major, minor : i32,  /*!< set the OpenGL API profile version (by default glMajor is 1, glMinor is 0) */
-	share : ^glContext,  /*!< Share this OpenGL context with newly created OpenGL contexts; defaults to NULL. */
+	major, minor : i32, /*!< set the OpenGL API profile version (by default glMajor is 1, glMinor is 0) */
+	share : ^glContext, /*!< Share this OpenGL context with newly created OpenGL contexts; defaults to NULL. */
 	shareEGL : ^eglContext, /*!< Share this EGL context with newly created OpenGL contexts; defaults to NULL. */
 	renderer : glRenderer /*!< renderer to use e.g. accelerated or software defaults to accelerated */
 }
@@ -930,7 +928,7 @@ foreign native {
 	* @param len [OUTPUT] A pointer to store the number of monitors found.
 	* @return An allocated array of pointers to monitor structures that must be freed.
 	*/
-	getMonitors :: proc(len : ^c.size_t) -> ^^monitor  ---
+	getMonitors :: proc(len : ^c.size_t) -> [^]^monitor  ---
 
 	/**!
 	* @brief fills a pre-allocated array with available monitors.
@@ -1022,7 +1020,7 @@ foreign native {
 	* @param [OUTPUT] The previously set callback function for the first event, if any.
 	* @param [OUTPUT] The previously set callback function for the second event, if any.
 	*/
-	setDualEventCallback :: proc(type : eventType, func : genericFunc, first : ^genericFunc, second : ^genericFunc) ---
+	setDualEventCallback :: proc(type : eventType, func : genericFunc, first, second : ^genericFunc) ---
 
 	/**!
 	* @brief Sets the callback function for all events.
@@ -1115,14 +1113,14 @@ foreign native {
 	* @param X [OUTPUT] a pointer for the output X value
 	* @param Y [OUTPUT] a pointer for the output Y value
 	*/
-	getMouseScroll :: proc(x : ^c.float, y : ^c.float) ---
+	getMouseScroll :: proc(x, y : ^c.float) ---
 
 	/**!
 	* @brief outputs the current x, y movement vector of the mouse
 	* @param X [OUTPUT] a pointer for the output X vector value
 	* @param Y [OUTPUT] a pointer for the output Y vector value
 	*/
-	getMouseVector :: proc(x : ^c.float, y : ^c.float) ---
+	getMouseVector :: proc(x, y : ^c.float) ---
 	/** @} */
 
 	/**!
@@ -1137,7 +1135,7 @@ foreign native {
 	*
 	* NOTE: (windows) if the executable has an icon resource named ICON, it will be set as the initial icon for the window
 	*/
-	createWindow :: proc(name : cstring, x : i32, y : i32, w : i32, h : i32, flags : windowFlags) -> ^window ---
+	createWindow :: proc(name : cstring, x, y, w, h : i32, flags : windowFlags) -> ^window ---
 
 	/**!
 	* @brief creates a new window using a pre-allocated window structure
@@ -1150,7 +1148,7 @@ foreign native {
 	* @param win a pointer the pre-allocated window structure
 	* @return A pointer to the newly created window structure
 	*/
-	createWindowPtr :: proc(name : cstring, x : i32, y : i32, w : i32, h : i32, flags : windowFlags, win : ^window) -> ^window ---
+	createWindowPtr :: proc(name : cstring, x, y, w, h : i32, flags : windowFlags, win : ^window) -> ^window ---
 
 	/**!
 	* @brief creates a new surface structure
@@ -1198,7 +1196,7 @@ foreign native {
 	* @param y [OUTPUT] the y position of the window
 	* @return a bool if the function was successful
 	*/
-	window_getPosition :: proc(win: ^window, x: ^i32, y: ^i32) -> bool --- /*!<  */
+	window_getPosition :: proc(win: ^window, x, y: ^i32) -> bool --- /*!<  */
 
 	/**!
 	* @brief gets the size of the window | with window.w and window.h
@@ -1207,7 +1205,7 @@ foreign native {
 	* @param h [OUTPUT] the height of the window
 	* @return a bool if the function was successful
 	*/
-	window_getSize :: proc(win: ^window, w: ^i32, h: ^i32) -> bool ---
+	window_getSize :: proc(win: ^window, w, h: ^i32) -> bool ---
 
 	/**!
 	* @brief gets the size of the window in exact pixels
@@ -1216,7 +1214,7 @@ foreign native {
 	* @param h [OUTPUT] the height of the window
 	* @return a bool if the function was successful
 	*/
-	window_getSizeInPixels :: proc(win: ^window, w: ^i32, h: ^i32) -> bool ---
+	window_getSizeInPixels :: proc(win: ^window, w, h: ^i32) -> bool ---
 
 	/**!
 	* @brief gets the flags of the window | returns window._flags
@@ -1244,7 +1242,7 @@ foreign native {
 	* @param win a pointer to the target window
 	* @param events the event flags to enable (use allEventFlags for all)
 	*/
-	window_setEnabledEvents :: proc(win: ^window, events : eventFlag ) ---
+	window_setEnabledEvents :: proc(win: ^window, events : eventFlag) ---
 
 	/**!
 	* @brief gets the currently enabled events for the window
@@ -1295,7 +1293,7 @@ foreign native {
 	* @param layer a pointer to the macOS layer object
 	* @note Only available on macOS platforms
 	*/
-	window_setLayer_OSX :: proc(win: ^window, layer : rawptr ) ---
+	window_setLayer_OSX :: proc(win: ^window, layer : rawptr) ---
 
 	/**!
 	* @brief retrieves the macOS view object associated with the window
@@ -1453,7 +1451,7 @@ foreign native {
 	* @param y [OUTPUT] pointer to store the y position
 	* @return TRUE if there is an active drag, FALSE otherwise
 	*/
-	window_getDataDrag :: proc(win: ^window, x : ^i32, y : ^i32) -> bool ---
+	window_getDataDrag :: proc(win: ^window, x, y : ^i32) -> bool ---
 
 	/**!
 	* @brief checks if a data drop occurred in the window (first frame only)
@@ -1488,7 +1486,7 @@ foreign native {
 	* @param h [OUTPUT] the height of the window
 	* @return a bool if the function was successful
 	*/
-	window_fetchSize :: proc(win: ^window, w : ^i32, h : ^i32) -> bool ---
+	window_fetchSize :: proc(win: ^window, w, h : ^i32) -> bool ---
 
 	/**!
 	* @brief moves the window to a new position on the screen
@@ -1496,7 +1494,7 @@ foreign native {
 	* @param x the new x position
 	* @param y the new y position
 	*/
-	window_move :: proc(win: ^window, x : i32, y : i32) ---
+	window_move :: proc(win: ^window, x, y : i32) ---
 
 	/**!
 	* @brief moves the window to a specific monitor
@@ -1511,7 +1509,7 @@ foreign native {
 	* @param w the new width
 	* @param h the new height
 	*/
-	window_resize :: proc(win: ^window, w : i32, h : i32) ---
+	window_resize :: proc(win: ^window, w, h : i32) ---
 
 	/**!
 	* @brief sets the aspect ratio of the window
@@ -1519,7 +1517,7 @@ foreign native {
 	* @param w the width ratio
 	* @param h the height ratio
 	*/
-	window_setAspectRatio :: proc(win: ^window, w : i32, h : i32) ---
+	window_setAspectRatio :: proc(win: ^window, w, h : i32) ---
 
 	/**!
 	* @brief sets the minimum size of the window
@@ -1527,7 +1525,7 @@ foreign native {
 	* @param w the minimum width
 	* @param h the minimum height
 	*/
-	window_setMinSize :: proc(win: ^window, w : i32, h : i32) ---
+	window_setMinSize :: proc(win: ^window, w, h : i32) ---
 
 	/**!
 	* @brief sets the maximum size of the window
@@ -1535,7 +1533,7 @@ foreign native {
 	* @param w the maximum width
 	* @param h the maximum height
 	*/
-	window_setMaxSize :: proc(win: ^window, w : i32, h : i32) ---
+	window_setMaxSize :: proc(win: ^window, w, h : i32) ---
 
 	/**!
 	* @brief sets focus to the window
@@ -1682,7 +1680,7 @@ foreign native {
 	* @param mouse The standardmouse icon (see mouseIcon enum).
 	* @return True if the standard cursor was successfully applied.
 	*/
-	window_setMouseStandard :: proc(win: ^window, icon : mouseIcon ) -> bool  ---
+	window_setMouseStandard :: proc(win: ^window, icon : mouseIcon) -> bool  ---
 
 	/**!
 	* @brief Sets the mouse to the default cursor icon.
@@ -1913,7 +1911,7 @@ foreign native {
 	* @param func The function pointer to be used as the debug callback.
 	* @return The previously set debug callback function.
 	*/
-	setDebugCallback :: proc(func : debugFunc ) -> debugFunc ---
+	setDebugCallback :: proc(func : debugFunc) -> debugFunc ---
 
 	/**!
 	* @brief Sends a debug message manually through the currently set debug callback.
@@ -1921,7 +1919,7 @@ foreign native {
 	* @param err The associated error code.
 	* @param msg The debug message text.
 	*/
-	debugCallback :: proc(type : debugType , code : errorCode ,  msg : cstring) ---
+	debugCallback :: proc(type : debugType, code : errorCode, msg : cstring) ---
 	/** @} */
 
 	/** * @defgroup graphics_API
@@ -2059,7 +2057,7 @@ foreign native {
 	* @param len The length of the extension string.
 	* @return TRUE if supported, FALSE otherwise.
 	*/
-	extensionSupported_OpenGL :: proc(extension : ^u8, len : c.size_t) -> bool ---
+	extensionSupported_OpenGL :: proc(extension : cstring, len : c.size_t) -> bool ---
 
 	/**!
 	* @brief Checks whether a specific platform-dependent OpenGL extension is supported.
@@ -2067,7 +2065,7 @@ foreign native {
 	* @param len The length of the extension string.
 	* @return TRUE if supported, FALSE otherwise.
 	*/
-	extensionSupportedPlatform_OpenGL :: proc(extension : ^u8, len : c.size_t) -> bool ---
+	extensionSupportedPlatform_OpenGL :: proc(extension : cstring, len : c.size_t) -> bool ---
 
 	/* these are EGL specific functions, they may fallback to OpenGL */
 	/**!
@@ -2213,7 +2211,7 @@ foreign native {
 	 * @param count [OUTPUT] A pointer that will receive the number of required extensions (typically 2).
 	 * @return A pointer to a static array of required Vulkan instance extension names.
 	*/
-	getRequiredInstanceExtensions_Vulkan :: proc(count : c.size_t) -> []cstring ---
+	getRequiredInstanceExtensions_Vulkan :: proc(count : ^c.size_t) -> [^]cstring ---
 
 	/**!
 	 * @brief Creates a Vulkan surface for the specified window.
